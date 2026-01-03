@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>攀岩队考勤管理系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>登录</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginType">登录类型:</label>
+                    <select id="loginType" required>
+                        <option value="member">普通队员</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                
+                <!-- 普通队员登录表单 -->
+                <div id="memberLogin" class="login-section">
+                    <div class="form-group">
+                        <label for="nickname">昵称:</label>
+                        <select id="nickname" required>
+                            <option value="">请选择昵称</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="team">队伍:</label>
+                        <select id="team" required>
+                            <option value="">请选择队伍</option>
+                            <option value="进阶队">进阶队</option>
+                            <option value="初阶队">初阶队</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 管理员登录表单 -->
+                <div id="adminLogin" class="login-section" style="display: none;">
+                    <div class="form-group">
+                        <label for="adminPassword">密码:</label>
+                        <input type="password" id="adminPassword" required placeholder="请输入管理员密码">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">武大攀岩队考勤管理</h1>
+            <div class="nav-right">
+                <span id="currentUser"></span>
+                <button id="logoutBtn" class="btn btn-secondary">退出登录</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div id="mainContent" class="container" style="display: none;">
+        <!-- 选项卡 -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="checkin">考勤打卡</button>
+            <button class="tab-btn" data-tab="ranking">积分排行榜</button>
+            <button class="tab-btn" data-tab="records">考勤记录</button>
+            <button class="tab-btn admin-only" data-tab="admin">管理员功能</button>
+        </div>
+
+        <!-- 考勤打卡 -->
+        <div id="checkin" class="tab-content active">
+            <div class="card">
+                <h2>考勤打卡</h2>
+                <form id="checkinForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="checkinType">考勤类型:</label>
+                            <select id="checkinType" required>
+                                <option value="">请选择类型</option>
+                                <option value="代表参赛">代表参赛 (6分)</option>
+                                <option value="岩馆集训">岩馆集训 (3分)</option>
+                                <option value="岩馆黑练">岩馆黑练 (2分)</option>
+                                <option value="力量黑练">力量黑练 (2分)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="checkinDate">日期:</label>
+                            <input type="date" id="checkinDate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkinScreenshot">微信打卡截图:</label>
+                        <input type="file" id="checkinScreenshot" accept="image/*" required>
+                        <div id="preview" class="preview"></div>
+                        <input type="hidden" id="checkinScreenshotData">
+                    </div>
+                    <div class="form-group">
+                        <label for="checkinRemark">备注:</label>
+                        <textarea id="checkinRemark" rows="3" placeholder="可选"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交打卡</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 积分排行榜 -->
+        <div id="ranking" class="tab-content">
+            <div class="card">
+                <h2>积分排行榜</h2>
+                <div class="ranking-controls">
+                    <button class="btn btn-secondary" id="weeklyRanking">周榜</button>
+                    <button class="btn btn-secondary active" id="totalRanking">总榜</button>
+                </div>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>姓名</th>
+                            <th>代表参赛</th>
+                            <th>岩馆集训</th>
+                            <th>岩馆黑练</th>
+                            <th>力量黑练</th>
+                            <th>管理员复核</th>
+                            <th>总分</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankingBody">
+                        <!-- 数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 考勤记录 -->
+        <div id="records" class="tab-content">
+            <div class="card">
+                <h2>考勤记录</h2>
+                <div class="records-controls">
+                    <input type="text" id="searchRecords" placeholder="搜索姓名或类型">
+                    <select id="filterType">
+                        <option value="">全部类型</option>
+                        <option value="代表参赛">代表参赛</option>
+                        <option value="岩馆集训">岩馆集训</option>
+                        <option value="岩馆黑练">岩馆黑练</option>
+                        <option value="力量黑练">力量黑练</option>
+                    </select>
+                </div>
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>昵称</th>
+                            <th class="admin-only">队伍</th>
+                            <th>考勤类型</th>
+                            <th>日期</th>
+                            <th>微信打卡截图</th>
+                            <th>分数</th>
+                            <th>状态</th>
+                            <th class="admin-only">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsBody">
+                        <!-- 数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 管理员功能 -->
+        <div id="admin" class="tab-content">
+            <div class="card">
+                <h2>管理员功能</h2>
+                
+                <!-- 调整队员分数 -->
+                <div class="admin-section">
+                    <h3>调整队员分数</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="adjustName">选择队员:</label>
+                            <select id="adjustName">
+                                <option value="">请选择队员</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewScore">复核分数:</label>
+                            <input type="number" id="reviewScore" placeholder="输入复核分数（正数或负数）">
+                        </div>
+                    </div>
+                    <button id="adjustScoreBtn" class="btn btn-primary">调整分数</button>
+                </div>
+                
+                <hr style="margin: 20px 0;">
+                
+                <!-- 管理成员 -->
+                <div class="admin-section">
+                    <h3>管理成员</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newMemberName">新成员昵称:</label>
+                            <input type="text" id="newMemberName" placeholder="输入新成员昵称">
+                        </div>
+                        <div class="form-group">
+                            <label for="newMemberTeam">所属队伍:</label>
+                            <select id="newMemberTeam">
+                                <option value="">请选择队伍</option>
+                                <option value="进阶队">进阶队</option>
+                                <option value="初阶队">初阶队</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="addMemberBtn" class="btn btn-primary">添加成员</button>
+                    
+                    <div class="form-row" style="margin-top: 20px;">
+                        <div class="form-group">
+                            <label for="deleteMemberName">删除成员:</label>
+                            <select id="deleteMemberName">
+                                <option value="">请选择成员</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="deleteMemberBtn" class="btn btn-danger">删除成员</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
